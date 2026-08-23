@@ -1,0 +1,141 @@
+@import url("https://fonts.googleapis.com/css2?family=Bowlby+One&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --une-blue: #1e6ff5;
+  --fica-blue: #3da5f5;
+  --une-orange: #f5921e;
+  --night: #14425c;
+  --white: #ffffff;
+  --heart-red: #ee3124;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-white font-sans text-night antialiased;
+    text-wrap: pretty;
+  }
+  ::selection {
+    @apply bg-sun text-night;
+  }
+  /* acessibilidade: respeita quem desativou animações */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  /* scrollbar temática */
+  @supports (scrollbar-color: auto) {
+    html {
+      scrollbar-color: theme(colors.night / 30%) transparent;
+      scrollbar-width: thin;
+    }
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex select-none items-center gap-2 rounded-full px-6 py-3 font-semibold
+           transition-all duration-200 active:translate-y-0 active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fica/40;
+  }
+  .btn-sun {
+    @apply btn bg-sun text-night shadow-lg shadow-sun/20
+           hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl hover:shadow-sun/30;
+  }
+  .btn-une {
+    @apply btn bg-une text-white shadow-lg shadow-une/20
+           hover:-translate-y-0.5 hover:brightness-110 hover:shadow-xl hover:shadow-une/30;
+  }
+  .btn-ghost {
+    @apply btn border-2 border-white/60 text-white backdrop-blur-sm
+           hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-night;
+  }
+  .btn-outline {
+    @apply btn border-2 border-night/15 text-night hover:-translate-y-0.5 hover:border-night hover:bg-night hover:text-white;
+  }
+
+  .card {
+    @apply rounded-2xl bg-white shadow-soft ring-1 ring-night/10 transition-all duration-300
+           hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-sun;
+  }
+  .pill {
+    @apply rounded-full px-5 py-3 text-center font-bold;
+  }
+  .display {
+    @apply font-display uppercase leading-[0.95] tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* efeito de destaque marcado à mão */
+  .marker {
+    @apply relative inline-block;
+  }
+  .marker::after {
+    content: "";
+    @apply absolute -bottom-0.5 left-0 -z-10 h-[0.35em] w-full rounded-full bg-sun/45;
+  }
+
+  /* container padrão */
+  .shell {
+    @apply mx-auto w-full max-w-7xl px-6 sm:px-10;
+  }
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-kenburns {
+    animation: kenburns 20s ease-in-out infinite alternate;
+  }
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .text-gradient-une {
+    @apply bg-gradient-to-r from-une via-fica to-sun bg-clip-text text-transparent;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kenburns {
+  from {
+    transform: scale(1.05) translate(0, 0);
+  }
+  to {
+    transform: scale(1.15) translate(-1.5%, -1.5%);
+  }
+}
+
+/* rotação irregular por caractere no display */
+.jitter > span:nth-child(3n) {
+  display: inline-block;
+  transform: rotate(-2.5deg);
+}
+.jitter > span:nth-child(4n + 1) {
+  display: inline-block;
+  transform: rotate(1.8deg) translateY(-1px);
+}
