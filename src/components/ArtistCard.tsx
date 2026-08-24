@@ -1,52 +1,102 @@
 import { StarBadge } from "../brand/StarBadge";
 import { CATEGORY_COLOR, type Artist } from "../data/types";
-import { MapPin } from "lucide-react";
+import { MapPin, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const FALLBACK = "/assets/a3.jpg";
 
 export function ArtistCard({
   artist,
   onOpen,
+  priority = false,
 }: {
   artist: Artist;
   onOpen?: () => void;
+  /** true nos ~4 primeiros cards: carrega sem lazy e evita "flash" */
+  priority?: boolean;
 }) {
+  const pending = artist.status === "pendente";
+
   return (
-    <article className="card group overflow-hidden">
+    <article className="card group relative overflow-hidden transition-shadow focus-within:ring-2 focus-within:ring-une hover:shadow-soft">
       <div className="relative aspect-[4/5] overflow-hidden bg-night/10">
         <img
-          src={artist.photoUrl}
-          alt={`${artist.name}, ${artist.category} do ${artist.community}`}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          src={artist.photoUrl || FALLBACK}
+          alt={`Retrato de ${artist.name}`}
+          width={400}
+          height={500}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          onError={(e) => {
+            e.currentTarget.src = FALLBACK;
+            e.currentTarget.onerror = null;
+          }}
+          className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
         />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent"
+          aria-hidden="true"
+        />
+
         <span
-          className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold ${CATEGORY_COLOR[artist.category]}`}
+          className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold shadow-sm ${CATEGORY_COLOR[artist.category]}`}
         >
           {artist.category}
         </span>
+
         {artist.certified && (
-          <div
-            className="absolute right-2 top-2"
-            title="Perfil Profissionalizado"
-          >
+          <div className="absolute right-2 top-2">
             <StarBadge size={44}>
-              <span className="display text-[7px] text-fica">UF</span>
+              <span className="display text-[7px] text-fica" aria-hidden="true">
+                UF
+              </span>
             </StarBadge>
+            <span className="sr-only">Perfil profissionalizado UNE&FICA</span>
           </div>
         )}
+
+        {pending && (
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-800">
+            <Clock className="h-3 w-3" aria-hidden="true" /> Em análise
+          </span>
+        )}
       </div>
+
       <div className="p-5">
-        <h3 className="display text-base leading-tight text-night">
-          {artist.name}
+        <h3 className="display line-clamp-2 text-base leading-tight text-night">
+          {onOpen ? (
+            /* Overlay: card todo clicável, mas só 1 tab-stop e sem link aninhado */
+            <button
+              onClick={onOpen}
+              className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+            >
+              {artist.name}
+              <span className="sr-only"> — ver perfil completo</span>
+            </button>
+          ) : (
+            <Link
+              to={`/artista/${artist.slug}`}
+              className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+            >
+              {artist.name}
+              <span className="sr-only"> — ver perfil completo</span>
+            </Link>
+          )}
         </h3>
+
         <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-night/60">
-          <MapPin className="h-3.5 w-3.5" /> {artist.community}
+          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">{artist.community}</span>
         </p>
-        <button
-          onClick={onOpen}
-          className="btn-une mt-4 w-full justify-center text-sm"
+
+        {/* Decorativo: o clique real é o overlay acima */}
+        <span
+          aria-hidden="true"
+          className="btn-une mt-4 flex w-full justify-center text-sm transition-transform group-hover:-translate-y-0.5"
         >
           Ver Perfil
-        </button>
+        </span>
       </div>
     </article>
   );
