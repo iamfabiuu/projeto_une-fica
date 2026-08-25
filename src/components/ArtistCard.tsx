@@ -2,8 +2,7 @@ import { StarBadge } from "../brand/StarBadge";
 import { CATEGORY_COLOR, type Artist } from "../data/types";
 import { MapPin, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const FALLBACK = "/assets/a3.jpg";
+import { ArtistPhoto } from "./ArtistPhoto";
 
 export function ArtistCard({
   artist,
@@ -20,31 +19,21 @@ export function ArtistCard({
   return (
     <article className="card group relative overflow-hidden transition-shadow focus-within:ring-2 focus-within:ring-une hover:shadow-soft">
       <div className="relative aspect-[4/5] overflow-hidden bg-night/10">
-        <img
-          src={artist.photoUrl || FALLBACK}
-          alt={`Retrato de ${artist.name}`}
-          width={400}
-          height={500}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-          decoding="async"
-          onError={(e) => {
-            e.currentTarget.src = FALLBACK;
-            e.currentTarget.onerror = null;
-          }}
-          className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
+        <ArtistPhoto
+          src={artist.photoUrl}
+          name={artist.name}
+          priority={priority}
+          className="transition-transform duration-500 group-hover:scale-105"
         />
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent"
           aria-hidden="true"
         />
-
         <span
           className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold shadow-sm ${CATEGORY_COLOR[artist.category]}`}
         >
           {artist.category}
         </span>
-
         {artist.certified && (
           <div className="absolute right-2 top-2">
             <StarBadge size={44}>
@@ -55,7 +44,6 @@ export function ArtistCard({
             <span className="sr-only">Perfil profissionalizado UNE&FICA</span>
           </div>
         )}
-
         {pending && (
           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-800">
             <Clock className="h-3 w-3" aria-hidden="true" /> Em análise
@@ -66,7 +54,6 @@ export function ArtistCard({
       <div className="p-5">
         <h3 className="display line-clamp-2 text-base leading-tight text-night">
           {onOpen ? (
-            /* Overlay: card todo clicável, mas só 1 tab-stop e sem link aninhado */
             <button
               onClick={onOpen}
               className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
@@ -90,7 +77,6 @@ export function ArtistCard({
           <span className="truncate">{artist.community}</span>
         </p>
 
-        {/* Decorativo: o clique real é o overlay acima */}
         <span
           aria-hidden="true"
           className="btn-une mt-4 flex w-full justify-center text-sm transition-transform group-hover:-translate-y-0.5"

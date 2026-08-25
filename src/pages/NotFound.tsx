@@ -21,8 +21,8 @@ export default function NotFound() {
       </h1>
       <div className="mt-4 h-1 w-16 bg-sun" aria-hidden="true" />
       <p className="mt-4 text-night/70">
-        Não encontramos <code className="font-bold text-night">{pathname}</code>. Mas
-        tem muita coisa boa rolando por aqui.
+        Não encontramos <code className="font-bold text-night">{pathname}</code>
+        . Mas tem muita coisa boa rolando por aqui.
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">

@@ -1,7 +1,16 @@
 // pages/Login.tsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 import { Logo } from "../brand/Logo";
 import { ZigZagDivider } from "../brand/ZigZagDivider";
 import { useApp } from "../store/useApp";
@@ -28,10 +37,14 @@ export default function Login() {
 
   /* Já logado? Não faz sentido ver o login */
   useEffect(() => {
-    if (user) nav(from ?? (user.role === "admin" ? "/admin" : "/autogestao"), { replace: true });
+    if (user)
+      nav(from ?? (user.role === "admin" ? "/admin" : "/autogestao"), {
+        replace: true,
+      });
   }, [user, from, nav]);
 
-  const eErr = touched.email && !isEmail(email) ? "Informe um e-mail válido." : "";
+  const eErr =
+    touched.email && !isEmail(email) ? "Informe um e-mail válido." : "";
   const pErr = touched.pass && pass.length < 6 ? "Mínimo de 6 caracteres." : "";
   const valid = isEmail(email) && pass.length >= 6;
 
@@ -41,7 +54,9 @@ export default function Login() {
     if (!valid) return;
     try {
       const u = await signIn(email, pass);
-      nav(from ?? (u.role === "admin" ? "/admin" : "/autogestao"), { replace: true });
+      nav(from ?? (u.role === "admin" ? "/admin" : "/autogestao"), {
+        replace: true,
+      });
     } catch {
       /* erro já está no store */
     }
@@ -57,7 +72,10 @@ export default function Login() {
     <div className="grid min-h-dvh lg:grid-cols-2">
       {/* Lado marca */}
       <aside className="relative hidden overflow-hidden bg-night p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute right-0 top-0 h-full w-8 text-sun opacity-90" aria-hidden="true">
+        <div
+          className="absolute right-0 top-0 h-full w-8 text-sun opacity-90"
+          aria-hidden="true"
+        >
           <ZigZagDivider teeth={24} />
         </div>
         <Logo variant="light" />
@@ -91,11 +109,17 @@ export default function Login() {
 
           <form onSubmit={submit} noValidate className="mt-8 space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-bold text-night">
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-bold text-night"
+              >
                 E-mail
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night/40" aria-hidden="true" />
+                <Mail
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night/40"
+                  aria-hidden="true"
+                />
                 <input
                   ref={emailRef}
                   id="email"
@@ -112,7 +136,10 @@ export default function Login() {
                 />
               </div>
               {eErr && (
-                <p id="email-err" className="mt-1.5 text-xs font-semibold text-heart">
+                <p
+                  id="email-err"
+                  className="mt-1.5 text-xs font-semibold text-heart"
+                >
                   {eErr}
                 </p>
               )}
@@ -123,12 +150,18 @@ export default function Login() {
                 <label htmlFor="pass" className="text-sm font-bold text-night">
                   Senha
                 </label>
-                <Link to="/recuperar-senha" className="text-xs font-bold text-une hover:underline">
+                <Link
+                  to="/recuperar-senha"
+                  className="text-xs font-bold text-une hover:underline"
+                >
                   Esqueci
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night/40" aria-hidden="true" />
+                <Lock
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night/40"
+                  aria-hidden="true"
+                />
                 <input
                   id="pass"
                   type={show ? "text" : "password"}
@@ -148,27 +181,48 @@ export default function Login() {
                   aria-pressed={show}
                   className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-night/40 hover:bg-night/5 hover:text-night"
                 >
-                  {show ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                  {show ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
                 </button>
               </div>
               {pErr && (
-                <p id="pass-err" className="mt-1.5 text-xs font-semibold text-heart">
+                <p
+                  id="pass-err"
+                  className="mt-1.5 text-xs font-semibold text-heart"
+                >
                   {pErr}
                 </p>
               )}
             </div>
 
             {error && (
-              <p role="alert" className="flex items-start gap-2 rounded-xl bg-heart/10 p-3 text-sm font-semibold text-heart">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-xl bg-heart/10 p-3 text-sm font-semibold text-heart"
+              >
+                <AlertCircle
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
                 {error}
               </p>
             )}
 
-            <button type="submit" disabled={loading} className="btn-une w-full justify-center disabled:opacity-60">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-une w-full justify-center disabled:opacity-60"
+            >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Entrando…
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />{" "}
+                  Entrando…
                 </>
               ) : (
                 <>
@@ -184,7 +238,10 @@ export default function Login() {
 
           <p className="mt-6 text-center text-sm text-night/60">
             Ainda não tem conta?{" "}
-            <Link to="/inscricao" className="font-bold text-une hover:underline">
+            <Link
+              to="/inscricao"
+              className="font-bold text-une hover:underline"
+            >
               Inscreva-se na Vitrine
             </Link>
           </p>
@@ -193,13 +250,20 @@ export default function Login() {
           {import.meta.env.DEV && (
             <div className="mt-8 rounded-2xl bg-night/5 p-4">
               <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-night/50">
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> Acesso demo
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />{" "}
+                Acesso demo
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                <button onClick={() => fill("admin@unefica.org")} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-night hover:bg-sun">
+                <button
+                  onClick={() => fill("admin@unefica.org")}
+                  className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-night hover:bg-sun"
+                >
                   Entrar como Admin
                 </button>
-                <button onClick={() => fill("artista@unefica.org")} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-night hover:bg-sun">
+                <button
+                  onClick={() => fill("artista@unefica.org")}
+                  className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-night hover:bg-sun"
+                >
                   Entrar como Artista
                 </button>
               </div>

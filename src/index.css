@@ -139,3 +139,31 @@
   display: inline-block;
   transform: rotate(1.8deg) translateY(-1px);
 }
+
+@layer components {
+  .inp {
+    @apply block w-full rounded-xl border-2 border-night/15 bg-white px-4 py-3
+           text-base text-night placeholder:text-night/35
+           transition-colors duration-200
+           hover:border-night/25
+           focus:border-une focus:outline-none focus:ring-4 focus:ring-une/20
+           disabled:cursor-not-allowed disabled:bg-night/5 disabled:text-night/40;
+  }
+
+  /* estado de erro dirigido por aria — zero classe condicional no JSX */
+  .inp[aria-invalid="true"] {
+    @apply border-heart bg-heart/5 focus:border-heart focus:ring-heart/20;
+  }
+
+  /* select precisa de seta própria, senão fica "chapado" */
+  select.inp {
+    @apply cursor-pointer appearance-none bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.9rem center;
+    background-size: 1.1rem;
+  }
+
+  textarea.inp {
+    @apply min-h-[7rem] leading-relaxed;
+  }
+}

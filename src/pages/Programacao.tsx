@@ -33,7 +33,9 @@ export default function Programacao() {
     for (const d of DAYS) {
       map.set(
         d.n,
-        SCHEDULE.filter((s) => s.day === d.n).sort((a, b) => a.start.localeCompare(b.start)),
+        SCHEDULE.filter((s) => s.day === d.n).sort((a, b) =>
+          a.start.localeCompare(b.start),
+        ),
       );
     }
     return map;
@@ -62,10 +64,13 @@ export default function Programacao() {
       const dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
       if (!dir) return;
       e.preventDefault();
-      const nextIdx = (DAYS.findIndex((d) => d.n === day) + dir + DAYS.length) % DAYS.length;
+      const nextIdx =
+        (DAYS.findIndex((d) => d.n === day) + dir + DAYS.length) % DAYS.length;
       const next = DAYS[nextIdx].n;
       pickDay(next);
-      tablistRef.current?.querySelector<HTMLButtonElement>(`[data-day="${next}"]`)?.focus();
+      tablistRef.current
+        ?.querySelector<HTMLButtonElement>(`[data-day="${next}"]`)
+        ?.focus();
     },
     [day, pickDay],
   );
@@ -78,7 +83,9 @@ export default function Programacao() {
         <div className="mx-auto max-w-7xl px-6">
           <h1 className="display text-3xl sm:text-4xl">Programação</h1>
           <div className="mt-4 h-1 w-24 bg-sun" aria-hidden="true" />
-          <p className="mt-4 text-white/80">Três dias, quatro palcos, um só bairro.</p>
+          <p className="mt-4 text-white/80">
+            Três dias, quatro palcos, um só bairro.
+          </p>
         </div>
       </section>
 
@@ -93,7 +100,9 @@ export default function Programacao() {
         >
           {DAYS.map((d) => {
             const active = day === d.n;
-            const favs = (byDay.get(d.n) ?? []).filter((s) => favSet.has(s.id)).length;
+            const favs = (byDay.get(d.n) ?? []).filter((s) =>
+              favSet.has(s.id),
+            ).length;
             return (
               <button
                 key={d.n}
@@ -105,7 +114,9 @@ export default function Programacao() {
                 tabIndex={active ? 0 : -1}
                 onClick={() => pickDay(d.n)}
                 className={`relative rounded-2xl px-6 py-3 text-left font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-une focus-visible:ring-offset-2 ${
-                  active ? "bg-une text-white shadow-soft" : "bg-night/5 text-night hover:bg-night/10"
+                  active
+                    ? "bg-une text-white shadow-soft"
+                    : "bg-night/5 text-night hover:bg-night/10"
                 }`}
               >
                 <span className="display block text-lg">{d.label}</span>
@@ -132,14 +143,26 @@ export default function Programacao() {
             onClick={() => setOnlyFavs((v) => !v)}
             aria-pressed={onlyFavs}
             disabled={!favCountOfDay && !onlyFavs}
-            title={!favCountOfDay ? "Toque no coração de uma atração para montar seu roteiro" : undefined}
+            title={
+              !favCountOfDay
+                ? "Toque no coração de uma atração para montar seu roteiro"
+                : undefined
+            }
             className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-              onlyFavs ? "bg-heart text-white" : "bg-night/5 text-night hover:bg-heart/10 hover:text-heart"
+              onlyFavs
+                ? "bg-heart text-white"
+                : "bg-night/5 text-night hover:bg-heart/10 hover:text-heart"
             }`}
           >
-            <Heart className="h-4 w-4" fill={onlyFavs ? "currentColor" : "none"} aria-hidden="true" />
+            <Heart
+              className="h-4 w-4"
+              fill={onlyFavs ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
             Meu roteiro
-            {favCountOfDay > 0 && <span className="opacity-70">({favCountOfDay})</span>}
+            {favCountOfDay > 0 && (
+              <span className="opacity-70">({favCountOfDay})</span>
+            )}
           </button>
         </div>
 
@@ -163,7 +186,10 @@ export default function Programacao() {
               {slots.map((s) => {
                 const fav = favSet.has(s.id);
                 return (
-                  <li key={s.id} className="card animate-rise flex items-start gap-4 p-5">
+                  <li
+                    key={s.id}
+                    className="card animate-rise flex items-start gap-4 p-5"
+                  >
                     <div className="min-w-[74px] text-center">
                       <p className="display text-xl text-night">
                         <time dateTime={`${dayIso}T${s.start}`}>{s.start}</time>
@@ -181,9 +207,14 @@ export default function Programacao() {
                       >
                         {s.stage}
                       </span>
-                      <h3 className="mt-2 font-extrabold leading-tight text-night">{s.title}</h3>
+                      <h3 className="mt-2 font-extrabold leading-tight text-night">
+                        {s.title}
+                      </h3>
                       <p className="mt-1 flex items-center gap-1.5 text-sm text-night/60">
-                        <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <User
+                          className="h-3.5 w-3.5 shrink-0"
+                          aria-hidden="true"
+                        />
                         {artistName.get(s.artistId) ?? "A definir"}
                       </p>
                     </div>
@@ -193,10 +224,16 @@ export default function Programacao() {
                       aria-pressed={fav}
                       aria-label={`${fav ? "Remover dos" : "Adicionar aos"} favoritos: ${s.title}`}
                       className={`grid h-11 w-11 shrink-0 place-items-center rounded-full transition-all active:scale-90 ${
-                        fav ? "bg-heart text-white" : "bg-night/5 text-night/40 hover:bg-heart/10 hover:text-heart"
+                        fav
+                          ? "bg-heart text-white"
+                          : "bg-night/5 text-night/40 hover:bg-heart/10 hover:text-heart"
                       }`}
                     >
-                      <Heart className="h-5 w-5" fill={fav ? "currentColor" : "none"} aria-hidden="true" />
+                      <Heart
+                        className="h-5 w-5"
+                        fill={fav ? "currentColor" : "none"}
+                        aria-hidden="true"
+                      />
                     </button>
                   </li>
                 );
@@ -204,12 +241,20 @@ export default function Programacao() {
             </ul>
           ) : (
             <div className="py-12 text-center">
-              <CalendarX className="mx-auto h-14 w-14 text-night/20" aria-hidden="true" />
+              <CalendarX
+                className="mx-auto h-14 w-14 text-night/20"
+                aria-hidden="true"
+              />
               <p className="display mt-4 text-lg text-night">
-                {onlyFavs ? "Nenhum favorito neste dia" : "Programação em breve"}
+                {onlyFavs
+                  ? "Nenhum favorito neste dia"
+                  : "Programação em breve"}
               </p>
               {onlyFavs && (
-                <button onClick={() => setOnlyFavs(false)} className="btn-sun mt-5">
+                <button
+                  onClick={() => setOnlyFavs(false)}
+                  className="btn-sun mt-5"
+                >
                   Ver tudo do dia
                 </button>
               )}

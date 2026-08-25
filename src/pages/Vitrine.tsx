@@ -8,7 +8,11 @@ import { CATEGORIES, COMMUNITIES, type Artist } from "../data/types";
 
 /** Remove acentos e normaliza para busca tolerante */
 const norm = (s: string) =>
-  (s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 export default function Vitrine() {
   const approved = useApprovedArtists();
@@ -88,9 +92,8 @@ export default function Vitrine() {
           <h1 className="display text-3xl sm:text-4xl">Vitrine de Artistas</h1>
           <div className="mt-4 h-1 w-24 bg-sun" aria-hidden="true" />
           <p className="mt-4 max-w-xl text-white/80">
-            {approved.length}{" "}
-            {approved.length === 1 ? "talento" : "talentos"} do Ibura, prontos
-            para se apresentar, vender e ensinar.
+            {approved.length} {approved.length === 1 ? "talento" : "talentos"}{" "}
+            do Ibura, prontos para se apresentar, vender e ensinar.
           </p>
         </div>
       </section>
@@ -150,8 +153,12 @@ export default function Vitrine() {
             {list.length} {list.length === 1 ? "resultado" : "resultados"}
           </p>
 
-          {cat !== "todos" && <Chip label={cat} onRemove={() => setFilter("cat", "todos")} />}
-          {com !== "todos" && <Chip label={com} onRemove={() => setFilter("com", "todos")} />}
+          {cat !== "todos" && (
+            <Chip label={cat} onRemove={() => setFilter("cat", "todos")} />
+          )}
+          {com !== "todos" && (
+            <Chip label={com} onRemove={() => setFilter("com", "todos")} />
+          )}
           {hasFilters && (
             <button
               onClick={clearAll}
@@ -172,8 +179,13 @@ export default function Vitrine() {
           </ul>
         ) : (
           <div className="mt-16 text-center">
-            <SearchX className="mx-auto h-16 w-16 text-night/20" aria-hidden="true" />
-            <p className="display mt-4 text-xl text-night">Nada encontrado por aqui</p>
+            <SearchX
+              className="mx-auto h-16 w-16 text-night/20"
+              aria-hidden="true"
+            />
+            <p className="display mt-4 text-xl text-night">
+              Nada encontrado por aqui
+            </p>
             <p className="mt-2 text-night/60">
               {approved.length
                 ? "Tente outro termo ou limpe os filtros."
@@ -188,7 +200,9 @@ export default function Vitrine() {
         )}
       </div>
 
-      {selected && <ArtistModal artist={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <ArtistModal artist={selected} onClose={() => setSelected(null)} />
+      )}
     </>
   );
 }

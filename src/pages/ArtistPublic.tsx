@@ -108,8 +108,15 @@ export default function ArtistPublic() {
   const socials = [
     { key: s.instagram, Icon: FaInstagram, label: "Instagram" },
     { key: s.spotify, Icon: FaSpotify, label: "Spotify" },
-    { key: s.whatsapp && `https://wa.me/${s.whatsapp}`, Icon: FaWhatsapp, label: "WhatsApp" },
-  ].filter((x): x is { key: string; Icon: typeof FaInstagram; label: string } => !!x.key);
+    {
+      key: s.whatsapp && `https://wa.me/${s.whatsapp}`,
+      Icon: FaWhatsapp,
+      label: "WhatsApp",
+    },
+  ].filter(
+    (x): x is { key: string; Icon: typeof FaInstagram; label: string } =>
+      !!x.key,
+  );
 
   return (
     <>
@@ -154,7 +161,10 @@ export default function ArtistPublic() {
             </span>
             <h1 className="display mt-3 text-3xl text-night">{artist.name}</h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-night/60">
-              <MapPin className="h-4 w-4 shrink-0 text-sun" aria-hidden="true" />
+              <MapPin
+                className="h-4 w-4 shrink-0 text-sun"
+                aria-hidden="true"
+              />
               {artist.community} · Ibura, Recife/PE
             </p>
           </div>
@@ -225,12 +235,15 @@ export default function ArtistPublic() {
         <footer className="mt-12 rounded-2xl bg-night p-8 text-white">
           <p className="display text-lg">Contrate esse talento</p>
           <p className="mt-2 text-sm text-white/70">
-            Cachê e disponibilidade direto com o artista. Todo apoio fica no Ibura. 💛
+            Cachê e disponibilidade direto com o artista. Todo apoio fica no
+            Ibura. 💛
           </p>
 
           {artist.pixKey && (
             <div className="mt-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-white/40">Chave PIX</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40">
+                Chave PIX
+              </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <code className="min-w-0 break-all rounded-lg bg-white/10 px-3 py-2 text-sm">
                   {artist.pixKey}
@@ -262,7 +275,8 @@ export default function ArtistPublic() {
               rel="noopener noreferrer"
               className="btn-sun mt-6"
             >
-              <FaWhatsapp className="h-4 w-4" aria-hidden="true" /> Falar no WhatsApp
+              <FaWhatsapp className="h-4 w-4" aria-hidden="true" /> Falar no
+              WhatsApp
             </a>
           )}
         </footer>

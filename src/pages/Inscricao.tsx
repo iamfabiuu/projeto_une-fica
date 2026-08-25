@@ -1,11 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useForm, useWatch, type Control } from "react-hook-form";
+import { useForm, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, Loader2, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 import { useApp } from "../store/useApp";
 import { ArtistCard } from "../components/ArtistCard";
+import { PhotoUpload } from "../components/PhotoUpload";
 import {
   CATEGORIES,
   COMMUNITIES,
@@ -17,6 +24,7 @@ import {
 const DRAFT_KEY = "unefica:inscricao:draft";
 const BIO_MIN = 60;
 const BIO_MAX = 600;
+const PLACEHOLDER = "/assets/a3.jpg";
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
@@ -43,7 +51,10 @@ const schema = z.object({
   whatsapp: z
     .string()
     .transform(onlyDigits)
-    .refine((d) => d.length === 10 || d.length === 11, "Use DDD + número (10 ou 11 dígitos)"),
+    .refine(
+      (d) => d.length === 10 || d.length === 11,
+      "Use DDD + número (10 ou 11 dígitos)",
+    ),
   community: z.enum(COMMUNITIES as [Community, ...Community[]]),
   category: z.enum(CATEGORIES as [Category, ...Category[]]),
   instagram: socialUrl("instagram.com"),
@@ -53,7 +64,17 @@ const schema = z.object({
     .trim()
     .min(BIO_MIN, `Conte sua história em pelo menos ${BIO_MIN} caracteres`)
     .max(BIO_MAX, `Máximo de ${BIO_MAX} caracteres`),
-  photoUrl: z.string().trim().min(1, "Informe a URL de uma foto"),
+  photoUrl: z
+    .string()
+    .trim()
+    .min(1, "Envie uma foto principal")
+    .refine(
+      (s) =>
+        s.startsWith("data:image/") ||
+        s.startsWith("/") ||
+        /^https?:\/\//.test(s),
+      "Formato de imagem inválido",
+    ),
   pixKey: z.string().trim().min(4, "Informe sua chave PIX"),
   consent: z.literal(true, {
     errorMap: () => ({ message: "É necessário autorizar o uso dos dados" }),
@@ -64,9 +85,18 @@ type Data = z.output<typeof schema>;
 
 const STEPS = [
   { title: "Dados & Comunidade", fields: ["name", "whatsapp", "community"] },
-  { title: "Categoria & Portfólio", fields: ["category", "instagram", "spotify"] },
-  { title: "Descrição & Fotos", fields: ["bio", "photoUrl", "pixKey", "consent"] },
+  {
+    title: "Categoria & Portfólio",
+    fields: ["category", "instagram", "spotify"],
+  },
+  {
+    title: "Descrição & Fotos",
+    fields: ["bio", "photoUrl", "pixKey", "consent"],
+  },
 ] as const;
+
+/** Campos que não são focáveis via setFocus (input file é sr-only) */
+const UNFOCUSABLE = new Set<keyof Form>(["photoUrl", "consent"]);
 
 const DEFAULTS: Form = {
   name: "",
@@ -76,7 +106,7 @@ const DEFAULTS: Form = {
   instagram: "",
   spotify: "",
   bio: "",
-  photoUrl: "/assets/a3.jpg",
+  photoUrl: "",
   pixKey: "",
   consent: false as unknown as true,
 };
@@ -84,7 +114,14 @@ const DEFAULTS: Form = {
 function loadDraft(): Form {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw), consent: false as unknown as true } : DEFAULTS;
+    if (!raw) return DEFAULTS;
+    return {
+      ...DEFAULTS,
+      ...JSON.parse(raw),
+      // nunca restauramos foto nem consentimento
+      photoUrl: "",
+      consent: false as unknown as true,
+    };
   } catch {
     return DEFAULTS;
   }
@@ -104,7 +141,6 @@ export default function Inscricao() {
     trigger,
     handleSubmit,
     setFocus,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<Form>({
     resolver: zodResolver(schema),
@@ -117,8 +153,12 @@ export default function Inscricao() {
   const draftValues = useWatch({ control });
   useEffect(() => {
     const t = setTimeout(() => {
-      const { consent, ...rest } = draftValues as Form;
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(rest));
+      const { consent, photoUrl, ...rest } = draftValues as Form;
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(rest));
+      } catch {
+        /* cota cheia — segue o baile */
+      }
     }, 800);
     return () => clearTimeout(t);
   }, [draftValues]);
@@ -130,7 +170,8 @@ export default function Inscricao() {
       return;
     }
     headingRef.current?.focus();
-    setFocus(STEPS[step].fields[0] as keyof Form);
+    const first = STEPS[step].fields[0] as keyof Form;
+    if (!UNFOCUSABLE.has(first)) setFocus(first);
   }, [step, setFocus]);
 
   const next = useCallback(async () => {
@@ -179,7 +220,9 @@ export default function Inscricao() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-14">
-      <h1 className="display text-3xl text-night sm:text-4xl">Inscrição de Artistas</h1>
+      <h1 className="display text-3xl text-night sm:text-4xl">
+        Inscrição de Artistas
+      </h1>
       <div className="mt-4 h-1 w-24 bg-sun" aria-hidden="true" />
 
       {/* Stepper + barra de progresso */}
@@ -202,10 +245,14 @@ export default function Inscricao() {
                   {state === "done" ? <Check className="h-4 w-4" /> : i + 1}
                 </span>
                 <span
-                  className={`text-sm font-bold ${state === "todo" ? "text-night/50" : "text-night"}`}
+                  className={`text-sm font-bold ${
+                    state === "todo" ? "text-night/50" : "text-night"
+                  }`}
                 >
                   {s.title}
-                  {state === "current" && <span className="sr-only"> (etapa atual)</span>}
+                  {state === "current" && (
+                    <span className="sr-only"> (etapa atual)</span>
+                  )}
                 </span>
               </li>
             );
@@ -227,7 +274,11 @@ export default function Inscricao() {
       </nav>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={onKeyDown} noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          onKeyDown={onKeyDown}
+          noValidate
+        >
           <h2
             ref={headingRef}
             tabIndex={-1}
@@ -239,7 +290,11 @@ export default function Inscricao() {
           <div className="mt-6 space-y-5">
             {step === 0 && (
               <>
-                <Field id="name" label="Nome / Nome artístico" error={errors.name?.message}>
+                <Field
+                  id="name"
+                  label="Nome / Nome artístico"
+                  error={errors.name?.message}
+                >
                   {(p) => (
                     <input
                       {...p}
@@ -271,11 +326,17 @@ export default function Inscricao() {
                   )}
                 </Field>
 
-                <Field id="community" label="Comunidade do Ibura" error={errors.community?.message}>
+                <Field
+                  id="community"
+                  label="Comunidade do Ibura"
+                  error={errors.community?.message}
+                >
                   {(p) => (
                     <select {...p} {...register("community")} className="inp">
                       {COMMUNITIES.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
                       ))}
                     </select>
                   )}
@@ -285,11 +346,17 @@ export default function Inscricao() {
 
             {step === 1 && (
               <>
-                <Field id="category" label="Categoria" error={errors.category?.message}>
+                <Field
+                  id="category"
+                  label="Categoria"
+                  error={errors.category?.message}
+                >
                   {(p) => (
                     <select {...p} {...register("category")} className="inp">
                       {CATEGORIES.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
                       ))}
                     </select>
                   )}
@@ -302,7 +369,12 @@ export default function Inscricao() {
                   error={errors.instagram?.message}
                 >
                   {(p) => (
-                    <input {...p} {...register("instagram")} className="inp" placeholder="@seuperfil" />
+                    <input
+                      {...p}
+                      {...register("instagram")}
+                      className="inp"
+                      placeholder="@seuperfil"
+                    />
                   )}
                 </Field>
 
@@ -326,13 +398,19 @@ export default function Inscricao() {
 
             {step === 2 && (
               <>
-                <Field id="bio" label="Sua história e sua arte" error={errors.bio?.message}>
+                <Field
+                  id="bio"
+                  label="Sua história e sua arte"
+                  hint={`Entre ${BIO_MIN} e ${BIO_MAX} caracteres`}
+                  error={errors.bio?.message}
+                >
                   {(p) => (
                     <textarea
                       {...p}
                       {...register("bio")}
                       rows={5}
                       maxLength={BIO_MAX}
+                      aria-describedby={`${p["aria-describedby"] ?? ""} bio-count`.trim()}
                       className="inp resize-y"
                       placeholder="Conte de onde você vem, o que faz e o que já realizou..."
                     />
@@ -340,16 +418,19 @@ export default function Inscricao() {
                 </Field>
                 <BioCounter control={control} />
 
-                <Field
-                  id="photoUrl"
-                  label="URL da foto principal"
-                  hint="Retrato na vertical funciona melhor no card"
-                  error={errors.photoUrl?.message}
-                >
-                  {(p) => (
-                    <input {...p} {...register("photoUrl")} className="inp" placeholder="/assets/minha-foto.jpg" />
+                <Controller
+                  control={control}
+                  name="photoUrl"
+                  render={({ field, fieldState }) => (
+                    <PhotoUpload
+                      label="Foto principal"
+                      hint="É a imagem que aparece no seu card da vitrine"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={fieldState.error?.message}
+                    />
                   )}
-                </Field>
+                />
 
                 <Field
                   id="pixKey"
@@ -358,23 +439,39 @@ export default function Inscricao() {
                   error={errors.pixKey?.message}
                 >
                   {(p) => (
-                    <input {...p} {...register("pixKey")} className="inp" placeholder="email, CPF ou telefone" />
+                    <input
+                      {...p}
+                      {...register("pixKey")}
+                      className="inp"
+                      placeholder="email, CPF ou telefone"
+                    />
                   )}
                 </Field>
 
                 <div>
-                  <label className="flex cursor-pointer items-start gap-3 text-sm text-night">
+                  <label
+                    htmlFor="consent"
+                    className="flex cursor-pointer items-start gap-3 text-sm text-night"
+                  >
                     <input
                       {...register("consent")}
+                      id="consent"
                       type="checkbox"
-                      className="mt-0.5 h-5 w-5 shrink-0 accent-une"
+                      aria-invalid={!!errors.consent}
+                      aria-describedby={
+                        errors.consent ? "consent-error" : undefined
+                      }
+                      className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded accent-une focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-une/25"
                     />
                     <span>
-                      Autorizo o UNE&amp;FICA a divulgar meu nome, foto e trabalho nos canais do projeto.
+                      Autorizo o UNE&amp;FICA a divulgar meu nome, foto e
+                      trabalho nos canais do projeto.
                     </span>
                   </label>
                   {errors.consent?.message && (
-                    <ErrorText>{errors.consent.message}</ErrorText>
+                    <span id="consent-error" className="block">
+                      <ErrorText>{errors.consent.message}</ErrorText>
+                    </span>
                   )}
                 </div>
               </>
@@ -388,26 +485,41 @@ export default function Inscricao() {
                 onClick={() => setStep((s) => s - 1)}
                 className="btn bg-night/10 text-night hover:bg-night/20"
               >
-                <ArrowLeft className="h-4 w-4" /> Voltar
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar
               </button>
             )}
             {step < STEPS.length - 1 ? (
               <button type="button" onClick={next} className="btn-une">
-                Continuar <ArrowRight className="h-4 w-4" />
+                Continuar <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             ) : (
-              <button type="submit" disabled={isSubmitting || done} className="btn-sun disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={isSubmitting || done}
+                aria-label="Enviar inscrição"
+                className="btn-sun disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {isSubmitting ? (
-                  <>Enviando <Loader2 className="h-4 w-4 animate-spin" /></>
+                  <>
+                    Enviando{" "}
+                    <Loader2
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
+                  </>
                 ) : (
-                  <>Enviar inscrição <Check className="h-4 w-4" /></>
+                  <>
+                    Enviar inscrição{" "}
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                  </>
                 )}
               </button>
             )}
           </div>
 
           <p className="pt-4 text-xs text-night/50">
-            Seu progresso é salvo automaticamente neste navegador.
+            Seu progresso é salvo automaticamente neste navegador (exceto a
+            foto).
           </p>
         </form>
 
@@ -437,8 +549,16 @@ function BioCounter({ control }: { control: Control<Form> }) {
   const len = bio.trim().length;
   const ok = len >= BIO_MIN;
   return (
-    <p className={`-mt-3 text-xs font-semibold ${ok ? "text-une" : "text-night/50"}`}>
-      {ok ? `✓ ${len}/${BIO_MAX} caracteres` : `${len}/${BIO_MIN} caracteres mínimos`}
+    <p
+      id="bio-count"
+      aria-live="polite"
+      className={`-mt-3 text-xs font-semibold ${
+        ok ? "text-une" : "text-night/50"
+      }`}
+    >
+      {ok
+        ? `✓ ${len} de ${BIO_MAX} caracteres`
+        : `${len} de ${BIO_MIN} caracteres mínimos`}
     </p>
   );
 }
@@ -451,7 +571,7 @@ function LivePreview({ control }: { control: Control<Form> }) {
     name: v.name?.trim() || "Seu nome artístico",
     category: (v.category ?? "Cantor") as Category,
     community: (v.community ?? "UR-2") as Community,
-    photoUrl: v.photoUrl?.trim() || "/assets/a3.jpg",
+    photoUrl: v.photoUrl?.trim() || PLACEHOLDER,
     bio: v.bio ?? "",
     gallery: [],
     socials: {},
@@ -462,11 +582,14 @@ function LivePreview({ control }: { control: Control<Form> }) {
   };
 
   return (
-    <aside className="lg:sticky lg:top-28 lg:self-start">
+    <aside
+      aria-label="Pré-visualização do seu card"
+      className="lg:sticky lg:top-28 lg:self-start"
+    >
       <p className="mb-4 text-xs font-bold uppercase tracking-widest text-night/50">
         Pré-visualização na vitrine
       </p>
-      <div className="max-w-[280px]">
+      <div className="max-w-[280px]" aria-live="polite" aria-atomic="true">
         <ArtistCard artist={preview} />
       </div>
       <p className="mt-4 max-w-[280px] text-xs leading-relaxed text-night/60">
@@ -478,7 +601,10 @@ function LivePreview({ control }: { control: Control<Form> }) {
 
 function ErrorText({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-heart">
+    <span
+      role="alert"
+      className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-heart"
+    >
       <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
       {children}
     </span>
@@ -517,8 +643,16 @@ function Field({
           {hint}
         </p>
       )}
-      {children({ id, "aria-invalid": !!error, "aria-describedby": describedBy })}
-      {error && <span id={errId}><ErrorText>{error}</ErrorText></span>}
+      {children({
+        id,
+        "aria-invalid": !!error,
+        "aria-describedby": describedBy,
+      })}
+      {error && (
+        <span id={errId} className="block">
+          <ErrorText>{error}</ErrorText>
+        </span>
+      )}
     </div>
   );
 }

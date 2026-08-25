@@ -6,9 +6,9 @@ export default function Privacidade() {
       <div className="mt-4 h-1 w-24 bg-sun" aria-hidden="true" />
       <div className="mt-8 space-y-4 text-night/70">
         <p>
-          O UneHUB coleta apenas os dados informados voluntariamente na inscrição
-          da Vitrine (nome artístico, contato, portfólio) para fins de curadoria
-          cultural.
+          O UneHUB coleta apenas os dados informados voluntariamente na
+          inscrição da Vitrine (nome artístico, contato, portfólio) para fins de
+          curadoria cultural.
         </p>
         <p>
           Progresso de trilhas, media kit e favoritos ficam salvos apenas no seu
@@ -16,7 +16,10 @@ export default function Privacidade() {
         </p>
         <p>
           Para solicitar exclusão de dados:{" "}
-          <a href="mailto:contato@unefica.org" className="font-bold text-une hover:underline">
+          <a
+            href="mailto:contato@unefica.org"
+            className="font-bold text-une hover:underline"
+          >
             contato@unefica.org
           </a>
           .

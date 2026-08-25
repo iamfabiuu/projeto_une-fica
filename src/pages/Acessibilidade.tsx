@@ -20,14 +20,20 @@ export default function Acessibilidade() {
       <ul className="mt-6 space-y-3">
         {ITEMS.map((i) => (
           <li key={i} className="flex gap-3 text-night/80">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-fica" aria-hidden="true" />
+            <span
+              className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-fica"
+              aria-hidden="true"
+            />
             {i}
           </li>
         ))}
       </ul>
       <p className="mt-8 text-sm text-night/60">
         Encontrou uma barreira?{" "}
-        <a href="mailto:contato@unefica.org" className="font-bold text-une hover:underline">
+        <a
+          href="mailto:contato@unefica.org"
+          className="font-bold text-une hover:underline"
+        >
           Avise a gente
         </a>{" "}
         — corrigimos e creditamos.

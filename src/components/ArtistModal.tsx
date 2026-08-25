@@ -1,12 +1,28 @@
-import { useState, useEffect, useRef, useCallback, useId } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useId,
+  useMemo,
+} from "react";
 import { createPortal } from "react-dom";
-import { X, Check, Copy, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  X,
+  Check,
+  Copy,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { FaInstagram, FaYoutube, FaSpotify, FaWhatsapp } from "react-icons/fa6";
 import type { ComponentType, SVGProps } from "react";
 import { CATEGORY_COLOR, type Artist } from "../data/types";
+import { avatarFallback } from "../lib/avatar";
+import { ArtistPhoto } from "./ArtistPhoto";
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
-const FALLBACK = "/assets/a3.jpg";
+
 const FOCUSABLE =
   'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
 
@@ -45,7 +61,16 @@ export function ArtistModal({
   const openerRef = useRef<Element | null>(null);
   const titleId = useId();
 
-  const gallery = artist.gallery.length ? artist.gallery : [artist.photoUrl];
+  const fallback = useMemo(() => avatarFallback(artist.name), [artist.name]);
+
+  /** Capa primeiro, sem vazios e sem duplicatas */
+  const gallery = useMemo(
+    () =>
+      [artist.photoUrl, ...(artist.gallery ?? [])]
+        .filter((u): u is string => !!u?.trim())
+        .filter((u, i, arr) => arr.indexOf(u) === i),
+    [artist.photoUrl, artist.gallery],
+  );
 
   /* Trava scroll + guarda o gatilho + foco inicial */
   useEffect(() => {
@@ -63,23 +88,26 @@ export function ArtistModal({
     };
   }, []);
 
-  /* Esc + focus trap (Esc no lightbox fecha só o lightbox) */
+  /* Esc + setas + focus trap (Esc no lightbox fecha só o lightbox) */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
-        zoom !== null ? setZoom(null) : onClose();
+        if (zoom !== null) setZoom(null);
+        else onClose();
         return;
       }
       if (zoom !== null) {
-        if (e.key === "ArrowRight") setZoom((i) => ((i ?? 0) + 1) % gallery.length);
-        if (e.key === "ArrowLeft") setZoom((i) => ((i ?? 0) - 1 + gallery.length) % gallery.length);
+        if (e.key === "ArrowRight")
+          setZoom((i) => ((i ?? 0) + 1) % gallery.length);
+        if (e.key === "ArrowLeft")
+          setZoom((i) => ((i ?? 0) - 1 + gallery.length) % gallery.length);
         return;
       }
       if (e.key !== "Tab" || !panelRef.current) return;
-      const items = [...panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-        (el) => el.offsetParent !== null,
-      );
+      const items = [
+        ...panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
+      ].filter((el) => el.offsetParent !== null);
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
@@ -105,7 +133,9 @@ export function ArtistModal({
     { href: artist.socials.instagram, Icon: FaInstagram, label: "Instagram" },
     { href: artist.socials.spotify, Icon: FaSpotify, label: "Spotify" },
     { href: artist.socials.youtube, Icon: FaYoutube, label: "YouTube" },
-  ].filter((s): s is { href: string; Icon: IconType; label: string } => !!s.href);
+  ].filter(
+    (s): s is { href: string; Icon: IconType; label: string } => !!s.href,
+  );
 
   return createPortal(
     <div
@@ -120,15 +150,9 @@ export function ArtistModal({
         className="animate-rise max-h-[90dvh] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-soft"
       >
         <div className="relative">
-          <img
-            src={artist.photoUrl || FALLBACK}
-            alt={`Retrato de ${artist.name}`}
-            className="h-56 w-full bg-night/5 object-cover"
-            onError={(e) => {
-              e.currentTarget.src = FALLBACK;
-              e.currentTarget.onerror = null;
-            }}
-          />
+          <div className="relative h-56 w-full overflow-hidden bg-night/5">
+            <ArtistPhoto src={artist.photoUrl} name={artist.name} priority />
+          </div>
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
             aria-hidden="true"
@@ -161,9 +185,12 @@ export function ArtistModal({
           </p>
 
           {gallery.length > 1 && (
-            <ul className="mt-6 flex gap-3 overflow-x-auto pb-2" aria-label="Galeria de fotos">
+            <ul
+              className="mt-6 flex gap-3 overflow-x-auto pb-2"
+              aria-label="Galeria de fotos"
+            >
               {gallery.map((g, i) => (
-                <li key={g}>
+                <li key={`${i}-${g}`}>
                   <button
                     onClick={() => setZoom(i)}
                     aria-label={`Ampliar foto ${i + 1} de ${gallery.length}`}
@@ -174,6 +201,10 @@ export function ArtistModal({
                       alt=""
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.src = fallback;
+                        e.currentTarget.onerror = null;
+                      }}
                       className="h-full w-full object-cover"
                     />
                   </button>
@@ -193,7 +224,10 @@ export function ArtistModal({
                     className="inline-flex items-center gap-2 rounded-full bg-night/5 px-4 py-2 text-sm font-semibold text-night transition-colors hover:bg-night hover:text-white"
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" /> {label}
-                    <span className="sr-only"> de {artist.name} (abre em nova aba)</span>
+                    <span className="sr-only">
+                      {" "}
+                      de {artist.name} (abre em nova aba)
+                    </span>
                   </a>
                 </li>
               ))}
@@ -207,11 +241,19 @@ export function ArtistModal({
               aria-label={`Copiar chave PIX de ${artist.name}`}
             >
               {copied === true ? (
-                <><Check className="h-4 w-4" /> Chave copiada!</>
+                <>
+                  <Check className="h-4 w-4" aria-hidden="true" /> Chave
+                  copiada!
+                </>
               ) : copied === false ? (
-                <><Copy className="h-4 w-4" /> Copie manualmente abaixo</>
+                <>
+                  <Copy className="h-4 w-4" aria-hidden="true" /> Copie
+                  manualmente abaixo
+                </>
               ) : (
-                <><Copy className="h-4 w-4" /> Apoiar via PIX</>
+                <>
+                  <Copy className="h-4 w-4" aria-hidden="true" /> Apoiar via PIX
+                </>
               )}
             </button>
             {artist.socials.whatsapp && (
@@ -223,7 +265,8 @@ export function ArtistModal({
                 )}`}
                 className="btn-une justify-center"
               >
-                <FaWhatsapp className="h-4 w-4" aria-hidden="true" /> Contratar / Contato
+                <FaWhatsapp className="h-4 w-4" aria-hidden="true" /> Contratar
+                / Contato
               </a>
             )}
           </div>
@@ -232,7 +275,11 @@ export function ArtistModal({
             PIX: <code className="font-semibold">{artist.pixKey}</code>
           </p>
           <span aria-live="polite" className="sr-only">
-            {copied === true ? "Chave PIX copiada" : copied === false ? "Falha ao copiar" : ""}
+            {copied === true
+              ? "Chave PIX copiada"
+              : copied === false
+                ? "Falha ao copiar"
+                : ""}
           </span>
         </div>
       </div>
@@ -247,21 +294,35 @@ export function ArtistModal({
           onMouseDown={(e) => e.target === e.currentTarget && setZoom(null)}
         >
           <img
-            src={gallery[zoom]}
+            src={gallery[zoom] ?? fallback}
             alt={`${artist.name} — foto ${zoom + 1}`}
+            onError={(e) => {
+              e.currentTarget.src = fallback;
+              e.currentTarget.onerror = null;
+            }}
             className="max-h-[85dvh] max-w-full rounded-2xl object-contain"
           />
           <button
             onClick={() => setZoom(null)}
             aria-label="Fechar foto"
-            className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
           {gallery.length > 1 && (
             <>
-              <NavBtn side="left" onClick={() => setZoom((i) => ((i ?? 0) - 1 + gallery.length) % gallery.length)} />
-              <NavBtn side="right" onClick={() => setZoom((i) => ((i ?? 0) + 1) % gallery.length)} />
+              <NavBtn
+                side="left"
+                onClick={() =>
+                  setZoom(
+                    (i) => ((i ?? 0) - 1 + gallery.length) % gallery.length,
+                  )
+                }
+              />
+              <NavBtn
+                side="right"
+                onClick={() => setZoom((i) => ((i ?? 0) + 1) % gallery.length)}
+              />
               <p className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white">
                 {zoom + 1} / {gallery.length}
               </p>
@@ -274,7 +335,13 @@ export function ArtistModal({
   );
 }
 
-function NavBtn({ side, onClick }: { side: "left" | "right"; onClick: () => void }) {
+function NavBtn({
+  side,
+  onClick,
+}: {
+  side: "left" | "right";
+  onClick: () => void;
+}) {
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
   return (
     <button

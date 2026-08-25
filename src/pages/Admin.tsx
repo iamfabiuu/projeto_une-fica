@@ -1,6 +1,15 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
-  Check, X, Clock, Users, TrendingUp, Search, Undo2, Inbox, Download, ArrowUpDown,
+  Check,
+  X,
+  Clock,
+  Users,
+  TrendingUp,
+  Search,
+  Undo2,
+  Inbox,
+  Download,
+  ArrowUpDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useApp, useArtists } from "../store/useApp";
@@ -16,10 +25,19 @@ const FILTERS = ["pendente", "aprovado", "rejeitado", "todos"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const norm = (s: string) =>
-  (s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 const fmtDate = (iso?: string) =>
-  iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—";
+  iso
+    ? new Date(iso).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+      })
+    : "—";
 
 export default function Admin() {
   const artists = useArtists();
@@ -29,7 +47,11 @@ export default function Admin() {
   const [raw, setRaw] = useState("");
   const [q, setQ] = useState("");
   const [asc, setAsc] = useState(false);
-  const [undo, setUndo] = useState<{ artist: Artist; from: Status; to: Status } | null>(null);
+  const [undo, setUndo] = useState<{
+    artist: Artist;
+    from: Status;
+    to: Status;
+  } | null>(null);
   const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -45,7 +67,10 @@ export default function Admin() {
       acc[a.status]++;
     }
     const decided = acc.aprovado + acc.rejeitado;
-    return { ...acc, rate: decided ? Math.round((acc.aprovado / decided) * 100) : 0 };
+    return {
+      ...acc,
+      rate: decided ? Math.round((acc.aprovado / decided) * 100) : 0,
+    };
   }, [artists]);
 
   const rows = useMemo(() => {
@@ -62,7 +87,11 @@ export default function Admin() {
 
   const act = useCallback(
     (artist: Artist, to: Status) => {
-      if (to === "rejeitado" && !window.confirm(`Rejeitar a inscrição de ${artist.name}?`)) return;
+      if (
+        to === "rejeitado" &&
+        !window.confirm(`Rejeitar a inscrição de ${artist.name}?`)
+      )
+        return;
       const from = artist.status;
       setStatus(artist.id, to);
       setUndo({ artist, from, to });
@@ -82,17 +111,33 @@ export default function Admin() {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const exportCsv = useCallback(() => {
-    const head = ["Nome", "Categoria", "Comunidade", "Status", "WhatsApp", "Envio"];
+    const head = [
+      "Nome",
+      "Categoria",
+      "Comunidade",
+      "Status",
+      "WhatsApp",
+      "Envio",
+    ];
     const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const csv = [
       head.join(";"),
       ...rows.map((a) =>
-        [a.name, a.category, a.community, a.status, a.socials?.whatsapp ?? "", a.createdAt]
+        [
+          a.name,
+          a.category,
+          a.community,
+          a.status,
+          a.socials?.whatsapp ?? "",
+          a.createdAt,
+        ]
           .map(esc)
           .join(";"),
       ),
     ].join("\r\n");
-    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
+    const url = URL.createObjectURL(
+      new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }),
+    );
     const a = Object.assign(document.createElement("a"), {
       href: url,
       download: `unefica-inscricoes-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -102,17 +147,39 @@ export default function Admin() {
   }, [rows]);
 
   const KPIS = [
-    { label: "Total de inscrições", value: stats.total, Icon: Users, color: "text-une" },
-    { label: "Aguardando análise", value: stats.pendente, Icon: Clock, color: "text-sun" },
-    { label: "Aprovados", value: stats.aprovado, Icon: Check, color: "text-emerald-600" },
-    { label: "Taxa de aprovação", value: `${stats.rate}%`, Icon: TrendingUp, color: "text-fica" },
+    {
+      label: "Total de inscrições",
+      value: stats.total,
+      Icon: Users,
+      color: "text-une",
+    },
+    {
+      label: "Aguardando análise",
+      value: stats.pendente,
+      Icon: Clock,
+      color: "text-sun",
+    },
+    {
+      label: "Aprovados",
+      value: stats.aprovado,
+      Icon: Check,
+      color: "text-emerald-600",
+    },
+    {
+      label: "Taxa de aprovação",
+      value: `${stats.rate}%`,
+      Icon: TrendingUp,
+      color: "text-fica",
+    },
   ];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-14">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="display text-3xl text-night sm:text-4xl">Painel de Gestão</h1>
+          <h1 className="display text-3xl text-night sm:text-4xl">
+            Painel de Gestão
+          </h1>
           <div className="mt-4 h-1 w-24 bg-sun" aria-hidden="true" />
         </div>
         <button
@@ -139,7 +206,11 @@ export default function Admin() {
 
       {/* Controles */}
       <div className="mt-10 flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por status">
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Filtrar por status"
+        >
           {FILTERS.map((f) => {
             const count = f === "todos" ? stats.total : stats[f];
             const active = filter === f;
@@ -149,11 +220,15 @@ export default function Admin() {
                 onClick={() => setFilter(f)}
                 aria-pressed={active}
                 className={`rounded-full px-4 py-2 text-sm font-bold capitalize transition-colors ${
-                  active ? "bg-une text-white" : "bg-night/5 text-night hover:bg-night/10"
+                  active
+                    ? "bg-une text-white"
+                    : "bg-night/5 text-night hover:bg-night/10"
                 }`}
               >
                 {f === "todos" ? "Todos" : `${f}s`}{" "}
-                <span className={active ? "text-white/70" : "text-night/40"}>{count}</span>
+                <span className={active ? "text-white/70" : "text-night/40"}>
+                  {count}
+                </span>
               </button>
             );
           })}
@@ -176,18 +251,26 @@ export default function Admin() {
         </div>
       </div>
 
-      <p aria-live="polite" className="mt-4 text-sm font-semibold text-night/50">
+      <p
+        aria-live="polite"
+        className="mt-4 text-sm font-semibold text-night/50"
+      >
         {rows.length} {rows.length === 1 ? "inscrição" : "inscrições"}
       </p>
 
       {rows.length === 0 ? (
         <div className="mt-10 rounded-2xl border-2 border-dashed border-night/15 py-20 text-center">
-          <Inbox className="mx-auto h-14 w-14 text-night/20" aria-hidden="true" />
+          <Inbox
+            className="mx-auto h-14 w-14 text-night/20"
+            aria-hidden="true"
+          />
           <p className="display mt-4 text-lg text-night">
             {q ? "Nenhum resultado para essa busca" : "Nada por aqui ainda"}
           </p>
           <p className="mt-2 text-sm text-night/60">
-            {filter === "pendente" && !q ? "Tudo analisado. Bom trabalho! 🎉" : "Ajuste os filtros."}
+            {filter === "pendente" && !q
+              ? "Tudo analisado. Bom trabalho! 🎉"
+              : "Ajuste os filtros."}
           </p>
         </div>
       ) : (
@@ -207,13 +290,17 @@ export default function Admin() {
                       {h}
                     </th>
                   ))}
-                  <th scope="col" className="px-5 py-4 text-xs font-bold uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-5 py-4 text-xs font-bold uppercase tracking-wider"
+                  >
                     <button
                       onClick={() => setAsc((v) => !v)}
                       aria-label={`Ordenar por data (${asc ? "mais antigos" : "mais recentes"} primeiro)`}
                       className="inline-flex items-center gap-1.5 hover:text-sun"
                     >
-                      Envio <ArrowUpDown className="h-3.5 w-3.5" aria-hidden="true" />
+                      Envio{" "}
+                      <ArrowUpDown className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   </th>
                   {["Status", "Ações"].map((h) => (
@@ -229,11 +316,20 @@ export default function Admin() {
               </thead>
               <tbody className="divide-y divide-night/10 bg-white">
                 {rows.map((a) => (
-                  <tr key={a.id} className="transition-colors hover:bg-night/[.03]">
-                    <th scope="row" className="px-5 py-4 text-left font-bold text-night">
+                  <tr
+                    key={a.id}
+                    className="transition-colors hover:bg-night/[.03]"
+                  >
+                    <th
+                      scope="row"
+                      className="px-5 py-4 text-left font-bold text-night"
+                    >
                       <div className="flex items-center gap-3">
                         <Avatar artist={a} />
-                        <Link to={`/artista/${a.slug}`} className="hover:text-une hover:underline">
+                        <Link
+                          to={`/artista/${a.slug}`}
+                          className="hover:text-une hover:underline"
+                        >
                           {a.name}
                         </Link>
                       </div>
@@ -266,7 +362,10 @@ export default function Admin() {
                 <div className="flex items-start gap-3">
                   <Avatar artist={a} />
                   <div className="min-w-0 flex-1">
-                    <Link to={`/artista/${a.slug}`} className="font-bold text-night hover:text-une">
+                    <Link
+                      to={`/artista/${a.slug}`}
+                      className="font-bold text-night hover:text-une"
+                    >
                       {a.name}
                     </Link>
                     <p className="truncate text-xs text-night/60">
@@ -278,7 +377,9 @@ export default function Admin() {
                       >
                         {a.status}
                       </span>
-                      <span className="text-[11px] text-night/40">{fmtDate(a.createdAt)}</span>
+                      <span className="text-[11px] text-night/40">
+                        {fmtDate(a.createdAt)}
+                      </span>
                     </div>
                   </div>
                   <Actions artist={a} onAct={act} />
